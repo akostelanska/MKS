@@ -89,7 +89,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t morse[32] = {1,0,1,0,1,0,0,1,1,1,0,1,1,1,0,1,1,1,0,0,1,0,1,0,1,0,0,0,0,0,0};
+  //uint8_t morse[32] = {1,0,1,0,1,0,0,1,1,1,0,1,1,1,0,1,1,1,0,0,1,0,1,0,1,0,0,0,0,0,0};
 
 
   /* USER CODE END 2 */
@@ -99,11 +99,13 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  /*LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
+	  /* 2.2
+	  LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
 	  LL_mDelay(200);
 	  LL_GPIO_ResetOutputPin(LD2_GPIO_Port, LD2_Pin);
 	  LL_mDelay(200);*/
 
+	  /* 2.3
 	  for(uint8_t i = 0 ; i<sizeof(morse); i++)
 	  {
 		 if(morse[i] == 1) {
@@ -113,6 +115,19 @@ int main(void)
 			 LL_GPIO_ResetOutputPin(LD2_GPIO_Port, LD2_Pin);
 			 LL_mDelay(200);
 		 }
+	  }*/
+
+	  uint32_t sos = 0b1010100111011101110010101000000;
+
+	  for(uint8_t i = 0 ; i<32; i++){
+		if (sos & 1) {
+			LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
+			LL_mDelay(200);
+		} else {
+			LL_GPIO_ResetOutputPin(LD2_GPIO_Port, LD2_Pin);
+			LL_mDelay(200);
+		}
+		 sos = sos >> 1;
 	  }
 
     /* USER CODE BEGIN 3 */
