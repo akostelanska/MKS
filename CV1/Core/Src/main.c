@@ -90,6 +90,8 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -97,7 +99,10 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
+	  LL_mDelay(200);
+	  LL_GPIO_ResetOutputPin(LD2_GPIO_Port, LD2_Pin);
+	  LL_mDelay(200);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
