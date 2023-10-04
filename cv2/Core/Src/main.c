@@ -73,21 +73,27 @@ void tlacitka(void) {
 		LL_GPIO_ResetOutputPin(LED2_GPIO_Port, LED2_Pin);
 	}
 
-	static uint32_t old_s2;
-	uint32_t new_s2 = LL_GPIO_IsInputPinSet(S2_GPIO_Port, S2_Pin);
-	if (old_s2 && !new_s2) { // falling edge
-		off_time = Tick + LED_TIME_SHORT;
-		LL_GPIO_SetOutputPin(LED2_GPIO_Port, LED2_Pin);
-	}
-	old_s2 = new_s2;
+	static uint32_t delay;
 
-	static uint32_t old_s1;
-	uint32_t new_s1 = LL_GPIO_IsInputPinSet(S1_GPIO_Port, S1_Pin);
-	if (old_s1 && !new_s1) { // falling edge
-		off_time = Tick + LED_LONG_TIME;
-		LL_GPIO_SetOutputPin(LED2_GPIO_Port, LED2_Pin);
+	if (Tick > delay + 40) {
+		static uint32_t old_s2;
+		uint32_t new_s2 = LL_GPIO_IsInputPinSet(S2_GPIO_Port, S2_Pin);
+		if (old_s2 && !new_s2) { // falling edge
+			off_time = Tick + LED_TIME_SHORT;
+			LL_GPIO_SetOutputPin(LED2_GPIO_Port, LED2_Pin);
+		}
+		old_s2 = new_s2;
+
+		static uint32_t old_s1;
+		uint32_t new_s1 = LL_GPIO_IsInputPinSet(S1_GPIO_Port, S1_Pin);
+		if (old_s1 && !new_s1) { // falling edge
+			off_time = Tick + LED_LONG_TIME;
+			LL_GPIO_SetOutputPin(LED2_GPIO_Port, LED2_Pin);
+		}
+		old_s1 = new_s1;
+		delay = Tick;
 	}
-	old_s1 = new_s1;
+
 
 }
 
