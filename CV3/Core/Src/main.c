@@ -102,6 +102,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  for(uint32_t value = 0; value < 1000; value = value + 111){
+		  sct_value(value);
+		  HAL_Delay(1000);
+	  }
   }
   /* USER CODE END 3 */
 }
