@@ -56,10 +56,6 @@ static volatile uint32_t raw_voltage;
 
 static volatile uint32_t avg_pot;
 
-uint32_t maxBit = 4096;
-uint32_t maxValue = 500;
-uint8_t maxLed = 9;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -132,8 +128,6 @@ int main(void) {
 	HAL_ADCEx_Calibration_Start(&hadc); // ADC musí byť najprv inicializovaný
 	HAL_ADC_Start_IT(&hadc);
 
-	uint32_t valuePerBit = maxValue / maxBit;
-	uint8_t ledPerBit = maxLed / maxBit;
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -142,43 +136,31 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		uint8_t led = raw_pot * ledPerBit;
-
 		static enum {
-			SHOW_POT, SHOW_VOLT, SHOW_TEMP
-		} state = SHOW_POT;
+					SHOW_POT, SHOW_VOLT, SHOW_TEMP
+				} state = SHOW_POT;
 		static uint32_t delay;
-
-
-
 		if (state == SHOW_POT) {
-			uint16_t value = raw_pot * valuePerBit;
-			sct_value(value, led);
-			//HAL_Delay(50);
-		} else if (state == SHOW_TEMP) {
+		sct_value(raw_pot * 500/4096, raw_pot * 9/4096);
+		HAL_Delay(50);
+		}else if (state == SHOW_TEMP) {
 			int32_t temperature = (raw_temp - (int32_t) (*TEMP30_CAL_ADDR));
 			temperature = temperature * (int32_t) (110 - 30);
 			temperature = temperature
 					/ (int32_t) (*TEMP110_CAL_ADDR - *TEMP30_CAL_ADDR);
 			temperature = temperature + 30;
-			sct_value(temperature, led);
+			sct_value(temperature, raw_pot * 9/4096);
 		} else if (state == SHOW_VOLT) {
 			uint32_t voltage = 330 * (*VREFINT_CAL_ADDR) / raw_voltage;
-			sct_value(voltage, led);
+			sct_value(voltage, raw_pot * 9/4096);
 		}
 
-		if (HAL_GetTick() > delay + 1000) {
-			state == SHOW_POT;
+		while (HAL_GPIO_ReadPin(S1_GPIO_Port, S1_Pin) != 0) {
+			state = SHOW_VOLT;
 		}
 
-		if(HAL_GetTick() > delay + 40){ //ošetrenie zákmitu
-			if (HAL_GPIO_ReadPin(S1_GPIO_Port, S1_Pin) != 0) {
-				state = SHOW_VOLT;
-			} else if (HAL_GPIO_ReadPin(S2_GPIO_Port, S2_Pin) != 0) {
-				state = SHOW_TEMP;
-			}
-			delay = HAL_GetTick();
-		}
+
+
 	}
 	/* USER CODE END 3 */
 }
