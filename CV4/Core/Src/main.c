@@ -52,13 +52,9 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 static volatile uint32_t raw_pot;
 static volatile uint32_t raw_temp;
-static volatile uint32_t raw_voltage;
+static volatile uint32_t raw_volt;
 
 static volatile uint32_t avg_pot;
-
-uint32_t maxBit = 4096;
-uint32_t maxValue = 500;
-uint8_t maxLed = 9;
 
 /* USER CODE END PV */
 
@@ -86,7 +82,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) //lokálna premenná
 	} else if (channel == 1) {
 		raw_temp = HAL_ADC_GetValue(hadc);
 	} else if (channel == 2) {
-		raw_voltage = HAL_ADC_GetValue(hadc);
+		raw_volt = HAL_ADC_GetValue(hadc);
 	}
 
 	if (__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_EOS))
@@ -132,8 +128,6 @@ int main(void) {
 	HAL_ADCEx_Calibration_Start(&hadc); // ADC musí byť najprv inicializovaný
 	HAL_ADC_Start_IT(&hadc);
 
-	uint32_t valuePerBit = maxValue / maxBit;
-	uint8_t ledPerBit = maxLed / maxBit;
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -142,18 +136,31 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		uint8_t led = raw_pot * ledPerBit;
+		uint32_t maxBit = 4096;
+		uint32_t maxValue = 500;
+		uint8_t maxLed = 9;
+
+		uint32_t valuePerBit = maxValue / maxBit;
+		uint8_t ledPerBit = maxLed / maxBit;
 
 		static enum {
 			SHOW_POT, SHOW_VOLT, SHOW_TEMP
 		} state = SHOW_POT;
+
 		static uint32_t delay;
 
+		//kontrola S1 a S2
+		if (HAL_GPIO_ReadPin(S1_GPIO_Port, S1_Pin) != 0) {
+			delay = HAL_GetTick();
+			state = SHOW_VOLT;
+		} else if (HAL_GPIO_ReadPin(S2_GPIO_Port, S2_Pin) != 0) {
+			delay = HAL_GetTick();
+			state = SHOW_TEMP;
+		}
 
-
+		//definícia stavov a činnosti počas nich
 		if (state == SHOW_POT) {
-			uint16_t value = raw_pot * valuePerBit;
-			sct_value(value, led);
+			sct_value(raw_pot * valuePerBit, raw_pot * ledPerBit);
 			//HAL_Delay(50);
 		} else if (state == SHOW_TEMP) {
 			int32_t temperature = (raw_temp - (int32_t) (*TEMP30_CAL_ADDR));
@@ -161,23 +168,18 @@ int main(void) {
 			temperature = temperature
 					/ (int32_t) (*TEMP110_CAL_ADDR - *TEMP30_CAL_ADDR);
 			temperature = temperature + 30;
-			sct_value(temperature, led);
-		} else if (state == SHOW_VOLT) {
-			uint32_t voltage = 330 * (*VREFINT_CAL_ADDR) / raw_voltage;
-			sct_value(voltage, led);
-		}
 
-		if (HAL_GetTick() > delay + 1000) {
-			state == SHOW_POT;
-		}
-
-		if(HAL_GetTick() > delay + 40){ //ošetrenie zákmitu
-			if (HAL_GPIO_ReadPin(S1_GPIO_Port, S1_Pin) != 0) {
-				state = SHOW_VOLT;
-			} else if (HAL_GPIO_ReadPin(S2_GPIO_Port, S2_Pin) != 0) {
-				state = SHOW_TEMP;
+			sct_value(temperature, raw_pot * ledPerBit);
+			if (HAL_GetTick() > delay + 1000) {
+				state = SHOW_POT;
 			}
-			delay = HAL_GetTick();
+		} else if (state == SHOW_VOLT) {
+			uint32_t voltage = 330 * (*VREFINT_CAL_ADDR) / raw_volt;
+
+			sct_value(voltage, raw_pot * ledPerBit);
+			if (HAL_GetTick() > delay + 1000) {
+				state = SHOW_POT;
+			}
 		}
 	}
 	/* USER CODE END 3 */
@@ -340,8 +342,7 @@ static void MX_GPIO_Init(void) {
 
 	/*Configure GPIO pin Output Level */
 	HAL_GPIO_WritePin(GPIOB,
-			SCT_NOE_Pin | SCT_CLK_Pin | SCT_SDI_Pin | SCT_NLA_Pin,
-			GPIO_PIN_RESET);
+	SCT_NOE_Pin | SCT_CLK_Pin | SCT_SDI_Pin | SCT_NLA_Pin, GPIO_PIN_RESET);
 
 	/*Configure GPIO pin : B1_Pin */
 	GPIO_InitStruct.Pin = B1_Pin;
