@@ -136,13 +136,6 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		uint32_t maxBit = 4096;
-		uint32_t maxValue = 500;
-		uint8_t maxLed = 9;
-
-		uint32_t valuePerBit = maxValue / maxBit;
-		uint8_t ledPerBit = maxLed / maxBit;
-
 		static enum {
 			SHOW_POT, SHOW_VOLT, SHOW_TEMP
 		} state = SHOW_POT;
@@ -150,17 +143,17 @@ int main(void) {
 		static uint32_t delay;
 
 		//kontrola S1 a S2
-		if (HAL_GPIO_ReadPin(S1_GPIO_Port, S1_Pin) != 0) {
+		if (HAL_GPIO_ReadPin(S1_GPIO_Port, S1_Pin) == 0) {
 			delay = HAL_GetTick();
 			state = SHOW_VOLT;
-		} else if (HAL_GPIO_ReadPin(S2_GPIO_Port, S2_Pin) != 0) {
+		} else if (HAL_GPIO_ReadPin(S2_GPIO_Port, S2_Pin) == 0) {
 			delay = HAL_GetTick();
 			state = SHOW_TEMP;
 		}
 
 		//definícia stavov a činnosti počas nich
 		if (state == SHOW_POT) {
-			sct_value(raw_pot * valuePerBit, raw_pot * ledPerBit);
+			sct_value(raw_pot * 500/4096, raw_pot * 9/4096);
 			//HAL_Delay(50);
 		} else if (state == SHOW_TEMP) {
 			int32_t temperature = (raw_temp - (int32_t) (*TEMP30_CAL_ADDR));
@@ -169,14 +162,14 @@ int main(void) {
 					/ (int32_t) (*TEMP110_CAL_ADDR - *TEMP30_CAL_ADDR);
 			temperature = temperature + 30;
 
-			sct_value(temperature, raw_pot * ledPerBit);
+			sct_value(temperature, raw_temp * 9/4096);
 			if (HAL_GetTick() > delay + 1000) {
 				state = SHOW_POT;
 			}
 		} else if (state == SHOW_VOLT) {
 			uint32_t voltage = 330 * (*VREFINT_CAL_ADDR) / raw_volt;
 
-			sct_value(voltage, raw_pot * ledPerBit);
+			sct_value(voltage, raw_volt * 9/4096);
 			if (HAL_GetTick() > delay + 1000) {
 				state = SHOW_POT;
 			}
