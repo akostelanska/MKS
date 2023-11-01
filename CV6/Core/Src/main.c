@@ -175,14 +175,17 @@ int main(void) {
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
+		//blikanie led vyrieši delay v hlavnej smyčke
 		static enum {
-			NTC, DS18B20, WAIT
-		} state = WAIT;
+			NTC, DS18B20
+		} state = DS18B20;
 
-		static int16_t temp_18b20;
-		static int16_t temp_ntc;
+		//static premenné len tam, kde nutne musia byť na začiatku nula !!!
+		int16_t temp_18b20;
+		int16_t temp_ntc;
 
-		static uint32_t delay;
+		int32_t delay;
+		static int32_t time;
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
@@ -194,28 +197,24 @@ int main(void) {
 			state = NTC;
 		}
 
-		if (state == WAIT) {
-			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+		//states
+		if (state == NTC) {
 			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
-			sct_value(0, 0);
-		} else if (state == NTC) {
 			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+
 			temp_ntc = HAL_ADC_GetValue(&hadc);
 			sct_value(temp_ntc[lookup], 0);
-
-			if (HAL_GetTick() > delay + TIME) {
-				state = WAIT;
-			}
 		} else if (state == DS18B20) {
+			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
-			sct_value(temp_18b20 / 10, 0);
 
-			OWConvertAll();
-			HAL_Delay(CONVERT_T_TIME);
-			OWReadTemperature(&temp_18b20);
+			time = HAL_GetTick();
 
-			if (HAL_GetTick() > delay + TIME) {
-				state = WAIT;
+			if(delay + CONVERT_T_TIME > time){
+				OWConvertAll();
+				HAL_Delay(CONVERT_T_TIME);
+				OWReadTemperature(&temp_18b20);
+				sct_value(temp_18b20 / 10, 0);
 			}
 		}
 	}
