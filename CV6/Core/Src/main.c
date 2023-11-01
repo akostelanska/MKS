@@ -33,6 +33,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define CONVERT_T_TIME 750
+#define TIME 1000
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -174,23 +175,49 @@ int main(void) {
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
+		static enum {
+			NTC, DS18B20, WAIT
+		} state = WAIT;
 
-		//static int16_t temp_18b20;
+		static int16_t temp_18b20;
 		static int16_t temp_ntc;
 
-		/*
-		sct_value(temp_18b20 / 10, 0);
-
-		OWConvertAll();
-		HAL_Delay(CONVERT_T_TIME);
-		OWReadTemperature(&temp_18b20);*/
-
-		temp_ntc = HAL_ADC_GetValue(&hadc);
-		sct_value(temp_ntc[lookup], 0);
-
+		static uint32_t delay;
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
+		if (HAL_GPIO_ReadPin(S1_GPIO_Port, S1_Pin) == 0) {
+			delay = HAL_GetTick();
+			state = DS18B20;
+		} else if (HAL_GPIO_ReadPin(S2_GPIO_Port, S2_Pin) == 0) {
+			delay = HAL_GetTick();
+			state = NTC;
+		}
+
+		if (state == WAIT) {
+			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+			sct_value(0, 0);
+		} else if (state == NTC) {
+			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+			temp_ntc = HAL_ADC_GetValue(&hadc);
+			sct_value(temp_ntc[lookup], 0);
+
+			if (HAL_GetTick() > delay + TIME) {
+				state = WAIT;
+			}
+		} else if (state == DS18B20) {
+			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
+			sct_value(temp_18b20 / 10, 0);
+
+			OWConvertAll();
+			HAL_Delay(CONVERT_T_TIME);
+			OWReadTemperature(&temp_18b20);
+
+			if (HAL_GetTick() > delay + TIME) {
+				state = WAIT;
+			}
+		}
 	}
 	/* USER CODE END 3 */
 }
@@ -338,7 +365,7 @@ static void MX_GPIO_Init(void) {
 
 	/*Configure GPIO pin Output Level */
 	HAL_GPIO_WritePin(GPIOB,
-			LED2_Pin | SCT_NOE_Pin | SCT_CLK_Pin | SCT_SDI_Pin | SCT_NLA_Pin,
+	LED2_Pin | SCT_NOE_Pin | SCT_CLK_Pin | SCT_SDI_Pin | SCT_NLA_Pin,
 			GPIO_PIN_RESET);
 
 	/*Configure GPIO pin Output Level */
