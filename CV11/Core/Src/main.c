@@ -85,8 +85,8 @@ void circle(int radius) {
 		sx = x;
 		sy = y;
 
-		x = radius * cosf(phi*PI/180);
-		y = radius * sinf(phi*PI/180);
+		x = radius * cosf(phi * PI / 180);
+		y = radius * sinf(phi * PI / 180);
 
 		dx = x - sx;
 		dy = y - sy;
@@ -97,7 +97,7 @@ void circle(int radius) {
 	step(0, 0, false);
 }
 
-void smile(int radius){
+void smile(int radius) {
 	float x = radius;
 	float y = 0;
 
@@ -111,8 +111,8 @@ void smile(int radius){
 		sx = x;
 		sy = y;
 
-		x = radius * cosf(phi*PI/180);
-		y = radius * sinf(phi*PI/180);
+		x = radius * cosf(phi * PI / 180);
+		y = radius * sinf(phi * PI / 180);
 
 		dx = x - sx;
 		dy = y - sy;
@@ -164,17 +164,18 @@ int main(void) {
 
 		if (HAL_GPIO_ReadPin(USER_Btn_GPIO_Port, USER_Btn_Pin) == 1) {
 			circle(100); //nakresli vonkajsi obrys
-			step(-10,5,false);//posun na polohu usmevu
-			step(-10,5,false);
-			step(-10,0,false);
-			smile(75);//nakresli usmev
-			step(40,0,true);//posun na polohu nosu
-			step(0,-20,false);//nakresli nos
-			step(-10,-5, false);//posun na oko
-			step(-10,-5, false);
-			step(-10,-5, false);
-			circle(30);//nakresli oko
-			step(10, 0, false);//posun an druhe oko
+			step(-10, 10, false); //posun na polohu usmevu
+			step(-10, 0, false);
+			step(-10, 0, false);
+			smile(75); //nakresli usmev
+			step(20, 0, false);
+			step(20, 0, true); //posun na polohu nosu
+			step(0, -20, false); //nakresli nos
+			step(-10, -10, false); //posun na oko
+			step(-10, -5, false);
+			step(-10, -0, false);
+			circle(30); //nakresli oko
+			step(10, 0, false); //posun na druhe oko
 			step(10, 0, false);
 			step(10, 0, false);
 			step(10, 0, false);
@@ -182,7 +183,8 @@ int main(void) {
 			step(10, 0, false);
 			step(10, 0, false);
 			step(10, 0, false);
-			circle(30);//nakresli oko
+			step(10, 0, false);
+			circle(30); //nakresli oko
 		}
 		/*
 		 //TEST - posun myši
